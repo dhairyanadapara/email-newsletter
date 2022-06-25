@@ -51,10 +51,10 @@ jobs:
           toolchain: stable
           override: true
           components: clippy
-      - uses: actions-rs/clippy-checkout@v1
+      - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: -- -D warnings
+          args: --all-features
 
 
   coverage:
