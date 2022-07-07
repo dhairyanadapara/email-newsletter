@@ -1,5 +1,5 @@
 # Latest rust stable release
-FROM rust:1.62.0
+FROM rust:1.59.0
 
 # Let's switch our working directory to `app` (equivalent to `cd app`)
 # The `app` folder will be created for us by Docker in case it does not
@@ -7,10 +7,7 @@ FROM rust:1.62.0
 WORKDIR /app
 
 # Install the required system dependencies for our linking configuration
-RUN apt update && apt install lld clang llvm-11 llvm-11-dev llvm-11-tools -y
-
-# Install the required system dependencies for our linking configuration
-RUN apt update && apt install lld apt-utils clang -y
+RUN apt update && apt install build-essential lld clang -y
 
 # Copy all files from our working environment to our Docker image
 COPY . .
