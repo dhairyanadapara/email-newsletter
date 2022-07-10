@@ -1,4 +1,6 @@
-.cargo
-.github
-scripts
-target
+.env
+target/
+test/
+Dockerfile
+scripts/
+migration/

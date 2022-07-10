@@ -33,6 +33,7 @@ then
 		-e POSTGRES_PASSWORD=${DB_PASSWORD} \
 		-e DB_NAME=${DB_NAME} \
 		-p "${DB_PORT}":5432 \
+		--network=host \
 		-d postgres \
 		postgres -N 1000
 fi
