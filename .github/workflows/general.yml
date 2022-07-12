@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set environment variables
-        run: echo SQLX_OFFLINE=true
+        run: export SQLX_OFFLINE=true
 
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set environment variables
-        run: echo SQLX_OFFLINE=true
+        run: export SQLX_OFFLINE=true
 
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Set environment variables
-        run: echo SQLX_OFFLINE=true
+        run: export SQLX_OFFLINE=true
 
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
