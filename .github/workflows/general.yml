@@ -48,6 +48,9 @@ jobs:
     name: Clippy
     runs-on: ubuntu-latest
     steps:
+      - name: Set environment variables
+        run: echo SQLX_OFFLINE=true
+
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
@@ -64,6 +67,9 @@ jobs:
     name: Code coverage
     runs-on: ubuntu-latest
     steps:
+      - name: Set environment variables
+        run: echo SQLX_OFFLINE=true
+
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
