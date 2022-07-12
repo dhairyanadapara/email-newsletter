@@ -13,7 +13,7 @@ Given that we never refer to TRACING after its initialization, we could have use
 method. Unfortunately, as soon as the requirements change (i.e. you need to use it after initialization), you end up
 reaching for std::sync::SyncOnceCell, which is not stable yet. once_cell covers both usecases - this seemed like a
 great opportunity to introduce a useful crate into your toolkit.
- */
+*/
 static TRACING: Lazy<()> = Lazy::new(|| {
     let default_filter_level = "info".to_string();
     let subscriber_name = "test".to_string();
@@ -123,16 +123,15 @@ async fn spawn_app() -> TestApp {
 }
 
 pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
-    let mut connection =
-        PgConnection::connect(&config.connection_string_without_db().expose_secret())
-            .await
-            .expect("Failed to connect to Postgres");
+    let mut connection = PgConnection::connect_with(&config.without_db())
+        .await
+        .expect("Failed to connect to Postgres");
     connection
         .execute(format!(r#"CREATE DATABASE "{}";"#, config.database_name).as_str())
         .await
         .expect("Failed to create database");
 
-    let connection_pool = PgPool::connect(&config.connection_string().expose_secret())
+    let connection_pool = PgPool::connect_with(config.with_db())
         .await
         .expect("Failed to connect to Postgres");
 

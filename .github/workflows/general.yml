@@ -11,6 +11,9 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
+      - name: Set environment variables
+        run: echo SQLX_OFFLINE=true
+
       - name: Checkout repository
         uses: actions/checkout@v2
 
