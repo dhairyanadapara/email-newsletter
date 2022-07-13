@@ -10,10 +10,16 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
     steps:
-      - name: Set environment variables
-        run: export SQLX_OFFLINE=true
-
       - name: Checkout repository
         uses: actions/checkout@v2
 
@@ -23,6 +29,13 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
+
+      - name: Migrate database
+        run: |
+          sudo apt-get install libpq-dev -y
+          cargo install --version=0.2.0 sqlx-cli --no-default-features --features postgres
+          SKIP_DOCKER=true ./scripts/init_db.sh
+
       - uses: actions-rs/cargo@v1
         with:
           command: test
@@ -47,6 +60,15 @@ jobs:
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
     steps:
       - name: Set environment variables
         run: export SQLX_OFFLINE=true
@@ -57,6 +79,11 @@ jobs:
           toolchain: stable
           override: true
           components: clippy
+      - name: Migrate database
+        run: |
+          sudo apt-get install libpq-dev -y
+          cargo install --version=0.2.0 sqlx-cli --no-default-features --features postgres
+          SKIP_DOCKER=true ./scripts/init_db.sh
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -66,6 +93,15 @@ jobs:
   coverage:
     name: Code coverage
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
     steps:
       - name: Set environment variables
         run: export SQLX_OFFLINE=true
@@ -75,6 +111,12 @@ jobs:
         with:
           toolchain: stable
           override: true
+
+      - name: Migrate database
+        run: |
+          sudo apt-get install libpq-dev -y
+          cargo install --version=0.2.0 sqlx-cli --no-default-features --features postgres
+          SKIP_DOCKER=true ./scripts/init_db.sh
 
       - uses: actions-rs/tarpaulin@v0.1
         with:
