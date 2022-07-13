@@ -17,5 +17,5 @@ SKIP_DOCKER=true ./scripts/init_db.sh
 ### SQLX offline data
 
 ```dotnetcli
-cargo sqlx prepare -- --lib
+cargo sqlx prepare --merged -- --all-targets --all-features
 ```
