@@ -20,8 +20,14 @@ SKIP_DOCKER=true ./scripts/init_db.sh
 cargo sqlx prepare --merged -- --all-targets --all-features
 ```
 
+### Build docker image
 
-Deploy to Heroku
+```
+docker build --tag email-newsletter --file Dockerfile .
+```
+
+### Deploy to Heroku
+
 ```
 heroku login
 
@@ -39,4 +45,4 @@ heroku container:release web -a rust-email-newsletter
 
 ```
 
-url: https://rust-email-newsletter.herokuapp.com
+url: <https://rust-email-newsletter.herokuapp.com>
