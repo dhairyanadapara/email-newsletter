@@ -79,6 +79,7 @@ async fn subscribe_bad_request_test() {
     let test_cases = vec![
         ("name=le%20guin", "missing the email"),
         ("email=ursula_le_guin%40gmail.com", "missing the name"),
+        ("email=not-an-email", "not-an-email"),
         ("", "missing both name and email"),
     ];
 
