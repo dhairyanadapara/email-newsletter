@@ -14,7 +14,7 @@ async fn main() -> std::io::Result<()> {
         .connect_timeout(std::time::Duration::from_secs(2))
         .connect_lazy_with(configuration.database.with_db());
 
-    let port = std::env::var("PORT").unwrap_or(configuration.application.port.to_string());
+    let port = std::env::var("PORT").unwrap_or_else(|_| configuration.application.port.to_string());
 
     let address = format!("{}:{}", configuration.application.host, port);
     tracing::info!("Address: {:?}", address);
