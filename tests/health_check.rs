@@ -4,9 +4,9 @@ use sqlx::{Connection, Executor, PgConnection, PgPool};
 use std::net::TcpListener;
 use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
+use zero2prod::email_client::EmailClient;
 use zero2prod::startup::run;
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
-
 /**
 Given that we never refer to TRACING after its initialization, we could have used std::sync::Once with its call_once
 method. Unfortunately, as soon as the requirements change (i.e. you need to use it after initialization), you end up
@@ -113,7 +113,18 @@ async fn spawn_app() -> TestApp {
 
     let connection_pool = configure_database(&configuration.database).await;
 
-    let server = run(listener, connection_pool.clone()).expect("Failed to bind address");
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("Invalid sender email address.");
+    let email_client = EmailClient::new(
+        configuration.email_client.base_url,
+        sender_email,
+        configuration.email_client.auth_token,
+    );
+
+    let server = run(listener, connection_pool.clone(), email_client.clone())
+        .expect("Failed to bind address");
     let _ = tokio::spawn(server);
 
     TestApp {

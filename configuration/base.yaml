@@ -5,4 +5,9 @@ database:
   password: "password"
   database_name: "newsletter"
 application:
-  port: 8000
+port: 8000
+email_client:
+  base_url: https://api.mailgun.net/v3/test.mailgun.org
+  auth_token: test-835621cf-b09123a7
+  sender: "test@newsletter.com"
+
