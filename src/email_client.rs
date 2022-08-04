@@ -33,10 +33,10 @@ impl EmailClient {
         let request_body = SendEmailRequest {
             from: self.sender.as_ref(),
             to: recipient.as_ref(),
-            subject: subject,
-            text: text,
+            subject,
+            text,
         };
-        let builder = self
+        let _builder = self
             .http_client
             .post(&url)
             .header(header::AUTHORIZATION, self.auth_token.expose_secret())
