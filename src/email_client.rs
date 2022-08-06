@@ -138,7 +138,6 @@ mod tests {
     #[tokio::test]
     async fn send_email_fails_if_server_returns_500() {
         let mock_server = MockServer::start().await;
-        let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         Mock::given(any())
@@ -157,7 +156,6 @@ mod tests {
     #[tokio::test]
     async fn send_email_times_out_if_the_server_takes_too_long() {
         let mock_server = MockServer::start().await;
-        let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
         let email_client = email_client(mock_server.uri());
 
         let response = ResponseTemplate::new(200).set_delay(std::time::Duration::from_secs(180));
