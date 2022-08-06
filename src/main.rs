@@ -20,10 +20,12 @@ async fn main() -> std::io::Result<()> {
         .sender()
         .expect("Invalid sender email address.");
 
+    let timeout = configuration.email_client.timeout();
     let email_client = EmailClient::new(
         configuration.email_client.base_url,
         sender_email,
         configuration.email_client.auth_token,
+        timeout,
     );
 
     let port = std::env::var("PORT").unwrap_or_else(|_| configuration.application.port.to_string());
