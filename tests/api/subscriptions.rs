@@ -3,16 +3,8 @@ use crate::helpers::spawn_app;
 #[tokio::test]
 async fn subscribe_ok_test() {
     let app = spawn_app().await;
-    let client = reqwest::Client::new();
-
     let body = "name=dhairya%20nadapara&email=dhairyanadapara98%40gmail.com";
-    let response = client
-        .post(&format!("{}/subscriptions", &app.address))
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(body)
-        .send()
-        .await
-        .expect("Failed to execture request");
+    let response = app.post_subscriptions(body.into()).await;
 
     assert_eq!(200, response.status().as_u16());
 
@@ -27,9 +19,7 @@ async fn subscribe_ok_test() {
 
 #[tokio::test]
 async fn subscribe_bad_request_test() {
-    // Arrange
     let app = spawn_app().await;
-    let client = reqwest::Client::new();
     let test_cases = vec![
         ("name=le%20guin", "missing the email"),
         ("email=ursula_le_guin%40gmail.com", "missing the name"),
@@ -38,13 +28,7 @@ async fn subscribe_bad_request_test() {
     ];
 
     for (invalid_body, error_message) in test_cases {
-        let response = client
-            .post(&format!("{}/subscriptions", &app.address))
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .body(invalid_body)
-            .send()
-            .await
-            .expect("Failed to execture request");
+        let response = app.post_subscriptions(invalid_body.into()).await;
 
         assert_eq!(
             400,
