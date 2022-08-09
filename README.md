@@ -1,5 +1,7 @@
 # Email Newsletter
 
+[![Rust](https://github.com/dhairyanadapara/email-newsletter/actions/workflows/general.yml/badge.svg?branch=master)](https://github.com/dhairyanadapara/email-newsletter/actions/workflows/general.yml)
+
 ## Prerequisites
 
 ### First Run
@@ -17,7 +19,7 @@ SKIP_DOCKER=true ./scripts/init_db.sh
 ### SQLX offline data
 
 ```dotnetcli
-cargo sqlx prepare --merged -- --all-targets --all-features
+cargo sqlx prepare -- --lib
 ```
 
 ### Build docker image
