@@ -14,20 +14,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      # Build Docker image
-      - name: Docker build
-        run: docker build --tag email-newsletter --file Dockerfile .
-
       - name: Docker login
         run: docker login --username=${{ secrets.HEROKU_APP_EMAIL }} --password=${{ secrets.HEROKU_API_KEY }} registry.heroku.com
 
       - name: Heroku Container login
+        uses: actions/heroku@master
         run: heroku container:login
+
+      # Build Docker image
+      - name: Docker build
+        run: docker build --tag email-newsletter --file Dockerfile .
 
       - name: Tag docker image to heroku registry
         run: docker tag email-newsletter registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
 
       - name: Publish
+        uses: actions/heroku@master
         run: |
           heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
           heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
