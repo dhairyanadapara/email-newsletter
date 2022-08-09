@@ -19,7 +19,9 @@ jobs:
 
       - name: Heroku Container login
         uses: actions/heroku@master
-        run: heroku container:login
+        with:
+          args: heroku container:login
+          secrets: ${{ secrets.HEROKU_APP_EMAIL }}
 
       # Build Docker image
       - name: Docker build
@@ -30,6 +32,7 @@ jobs:
 
       - name: Publish
         uses: actions/heroku@master
-        run: |
-          heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
-          heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
+        with:
+          args: |
+            heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
+            heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
