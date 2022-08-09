@@ -14,12 +14,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Build, Push and Deploy to Heroku # set whatever name you want to this step
-        id: heroku
-        uses: jctaveras/heroku-deploy@v1.0.0 # use the latest version of the action
-        with:
-          email: ${{ secrets.HEROKU_APP_EMAIL }} # your heroku email
-          api_key: ${{ secrets.HEROKU_API_KEY }} # your heroku api key
-          app_name: ${{ secrets.HEROKU_APP_NAME }} # you aplication name
-          dockerfile_path: '.' # set the path to the folder where the Dockerfile is located
-          process_type: 'web' # Specify the process type you want to build and release
+      # Build Docker image
+      - name: Docker build
+        run: docker build --tag email-newsletter --file Dockerfile .
+
+      - name: Docker login
+        run: docker login --username=${{ secrets.HEROKU_APP_EMAIL }} --password=${{ secrets.HEROKU_API_KEY }} registry.heroku.com
+
+      - name: Heroku Container login
+        run: heroku container:login
+
+      - name: Tag docker image to heroku registry
+        run: docker tag email-newsletter registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
+
+      - name: Publish
+        run: |
+          heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
+          heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
