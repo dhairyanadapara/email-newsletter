@@ -17,6 +17,17 @@ jobs:
       - name: Install Heroku
         run: sudo curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
 
+      - name: Set login Creds
+        run: |
+          cat <<EOF > ~./netrc
+          machine api.heroku.com
+            login ${{ secrets.HEROKU_APP_EMAIL }}
+            password ${{ secrets.HEROKU_API_KEY }}
+          machine git.heroku.com
+            login ${{ secrets.HEROKU_APP_EMAIL }}
+            password ${{ secrets.HEROKU_API_KEY }}
+          EOF
+
       - name: Docker login
         run: docker login --username=${{ secrets.HEROKU_APP_EMAIL }} --password=${{ secrets.HEROKU_API_KEY }} registry.heroku.com
 
