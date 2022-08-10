@@ -142,7 +142,9 @@ jobs:
             --locked
 
       - name: Run database migration
-        run: sqlx migrate run
+        run: |
+          echo $DATABASE_URL
+          sqlx migrate run
 
       - name: Deploy image
         run: heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
