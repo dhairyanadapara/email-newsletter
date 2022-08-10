@@ -19,8 +19,7 @@ jobs:
 
       - name: Set login Creds
         run: |
-          touch ~./netrc
-          cat <<EOF > ~./netrc
+          cat >~/.netrc <<EOF
           machine api.heroku.com
             login ${{ secrets.HEROKU_APP_EMAIL }}
             password ${{ secrets.HEROKU_API_KEY }}
