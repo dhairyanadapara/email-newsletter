@@ -1,16 +1,119 @@
-name: Deploy
+name: Deploy to Heroku.
+
+# Run workflow on every push to master branch.
 on:
   push:
-    branches:
-      - master
+    branches: [master]
+
+# Your workflows jobs.
 jobs:
-  build:
+  test:
+    name: Test
     runs-on: ubuntu-latest
+    services:
+     postgres:
+        image: postgres:12
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+    env:
+      SQLX_VERSION: 0.5.7
+      SQLX_FEATURES: postgres
     steps:
-      - uses: actions/checkout@v2
-      - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Cache dependencies
+        id: cache-dependencies
+        uses: actions/cache@v2
         with:
-          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
-          heroku_app_name: ${{secrets.HEROKU_APP_NAME}} #Must be unique in Heroku
-          heroku_email: ${{secrets.HEROKU_APP_EMAIL}}
-          usedocker: true
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Cache sqlx-cli
+        uses: actions/cache@v2
+        id: cache-sqlx
+        with:
+          path: |
+            ~/.cargo/bin/sqlx
+            ~/.cargo/bin/cargo-sqlx
+          key: ${{ runner.os }}-sqlx-${{ env.SQLX_VERSION }}-${{ env.SQLX_FEATURES }}
+
+      - name: Install sqlx-cli 
+        uses: actions-rs/cargo@v1
+        if: steps.cache-sqlx.outputs.cache-hit == false
+        with:
+          command: install 
+          args: >
+            sqlx-cli
+            --force
+            --version=${{ env.SQLX_VERSION }}
+            --features=${{ env.SQLX_FEATURES }}
+            --no-default-features
+            --locked
+
+      - name: Migrate database
+        run: |
+          sudo apt-get install libpq-dev -y
+          SKIP_DOCKER=true ./scripts/init_db.sh
+      - name: Check sqlx-data.json is up-to-date
+        run: |
+          cargo sqlx prepare --check -- --lib
+
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      # Check-out your repository.
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install Heroku
+        run: sudo curl https://cli-assets.heroku.com/install-ubuntu.sh | sh
+
+      - name: Set login Creds
+        run: |
+          cat >~/.netrc <<EOF
+          machine api.heroku.com
+            login ${{ secrets.HEROKU_APP_EMAIL }}
+            password ${{ secrets.HEROKU_API_KEY }}
+          machine git.heroku.com
+            login ${{ secrets.HEROKU_APP_EMAIL }}
+            password ${{ secrets.HEROKU_API_KEY }}
+          EOF
+
+      - name: Docker login
+        run: docker login --username=${{ secrets.HEROKU_APP_EMAIL }} --password=${{ secrets.HEROKU_API_KEY }} registry.heroku.com
+
+      - name: Heroku Container login
+        run: heroku container:login
+      
+      # Build Docker image
+      - name: Docker build
+        run: docker build --tag email-newsletter --file Dockerfile .
+
+      - name: Tag docker image to heroku registry
+        run: docker tag email-newsletter registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
+
+      - name: Publish
+        run: |
+          heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
+          heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}

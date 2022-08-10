@@ -2,4 +2,4 @@ build:
   docker:
     web: Dockerfile
 run:
-  web: docker run -p 8000:8000 email-newsletter
+  web: ./zero2prod

@@ -30,10 +30,10 @@ impl Application {
             timeout,
         );
 
-        let address = format!(
-            "{}:{}",
-            configuration.application.host, configuration.application.port
-        );
+        let port =
+            std::env::var("PORT").unwrap_or_else(|_| configuration.application.port.to_string());
+
+        let address = format!("{}:{}", configuration.application.host, port);
 
         tracing::info!("Address: {:?}", address);
         let listener = TcpListener::bind(address).expect("Failed to bind random port");
