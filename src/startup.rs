@@ -15,10 +15,7 @@ pub struct Application {
 
 impl Application {
     pub async fn build(configuration: Settings) -> Result<Self, std::io::Error> {
-        let connection_pool = match get_connection_pool(&configuration.database).await {
-            Ok(pool) => pool,
-            Err(_) => panic!("Database connection Failed")
-        };
+        let connection_pool = get_connection_pool(&configuration.database);
 
         let sender_email = configuration
             .email_client
@@ -54,10 +51,10 @@ impl Application {
     }
 }
 
-pub async fn get_connection_pool(configuration: &DatabaseSettings) -> Result<PgPool, sqlx::Error> {
+pub fn get_connection_pool(configuration: &DatabaseSettings) -> Result<PgPool, sqlx::Error> {
     PgPoolOptions::new()
         .connect_timeout(std::time::Duration::from_secs(2))
-        .connect_with(configuration.with_db()).await
+        .connect_lazy_with(configuration.with_db())
 }
 
 pub fn run(

@@ -62,10 +62,7 @@ pub async fn spawn_app() -> TestApp {
 
     TestApp {
         address,
-        db_pool: match get_connection_pool(&configuration.database).await {
-            Ok(pool) => pool,
-            Err(_) => panic!("Database connection Failed")
-        },
+        db_pool: get_connection_pool(&configuration.database),
     }
 }
 
