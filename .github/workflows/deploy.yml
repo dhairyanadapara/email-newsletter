@@ -81,6 +81,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: test
+    env:
+      SQLX_VERSION: 0.5.7
+      SQLX_FEATURES: postgres
     steps:
       # Check-out your repository.
       - name: Checkout
@@ -113,7 +116,35 @@ jobs:
       - name: Tag docker image to heroku registry
         run: docker tag email-newsletter registry.heroku.com/${{ secrets.HEROKU_APP_NAME }}/web
 
-      - name: Publish
+      - name: Push image to registry
+        run: heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
+        
+      - name: Cache sqlx-cli
+        uses: actions/cache@v2
+        id: cache-sqlx
+        with:
+          path: |
+            ~/.cargo/bin/sqlx
+            ~/.cargo/bin/cargo-sqlx
+          key: ${{ runner.os }}-sqlx-${{ env.SQLX_VERSION }}-${{ env.SQLX_FEATURES }}
+
+      - name: Install sqlx-cli 
+        uses: actions-rs/cargo@v1
+        if: steps.cache-sqlx.outputs.cache-hit == false
+        with:
+          command: install 
+          args: >
+            sqlx-cli
+            --force
+            --version=${{ env.SQLX_VERSION }}
+            --features=${{ env.SQLX_FEATURES }}
+            --no-default-features
+            --locked
+
+      - name: Run database migration
         run: |
-          heroku container:push web -a ${{ secrets.HEROKU_APP_NAME }}
-          heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
+          echo DATABASE_URL = ${{ secrets.DATABASE_URL }} > .env
+          sqlx migrate run
+
+      - name: Deploy image
+        run: heroku container:release web -a ${{ secrets.HEROKU_APP_NAME }}
