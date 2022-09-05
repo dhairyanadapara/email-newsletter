@@ -4,7 +4,7 @@ use reqwest::Client;
 use secrecy::ExposeSecret;
 use secrecy::Secret;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EmailClient {
     http_client: Client,
     base_url: String,
@@ -32,6 +32,7 @@ impl EmailClient {
         recipient: SubscriberEmail,
         subject: &str,
         text: &str,
+        html: &str
     ) -> Result<(), reqwest::Error> {
         let url = format!("{}/message", self.base_url);
 
@@ -40,6 +41,7 @@ impl EmailClient {
             to: recipient.as_ref(),
             subject,
             text,
+            html
         };
         let _builder = self
             .http_client
@@ -60,6 +62,7 @@ struct SendEmailRequest<'a> {
     to: &'a str,
     subject: &'a str,
     text: &'a str,
+    html: &'a str
 }
 
 #[cfg(test)]
@@ -86,6 +89,7 @@ mod tests {
                     && body.get("To").is_some()
                     && body.get("Subject").is_some()
                     && body.get("Text").is_some()
+                    && body.get("Html").is_some()
             } else {
                 false
             }
@@ -129,7 +133,7 @@ mod tests {
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content())
+            .send_email(email(), &subject(), &content(), &content())
             .await;
 
         assert_ok!(outcome);
@@ -147,7 +151,7 @@ mod tests {
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content())
+            .send_email(email(), &subject(), &content(), &content())
             .await;
 
         assert_err!(outcome);
@@ -167,7 +171,7 @@ mod tests {
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content())
+            .send_email(email(), &subject(), &content(), &content())
             .await;
 
         assert_err!(outcome);

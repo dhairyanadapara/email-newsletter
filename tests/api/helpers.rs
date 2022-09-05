@@ -4,6 +4,7 @@ use uuid::Uuid;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
 use zero2prod::startup::{get_connection_pool, Application};
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
+use wiremock::MockServer;
 
 /**
 Given that we never refer to TRACING after its initialization, we could have used std::sync::Once with its call_once
@@ -27,6 +28,7 @@ static TRACING: Lazy<()> = Lazy::new(|| {
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
+    pub email_server: MockServer
 }
 
 impl TestApp {
@@ -44,15 +46,20 @@ impl TestApp {
 pub async fn spawn_app() -> TestApp {
     Lazy::force(&TRACING);
 
+    let email_server = MockServer::start().await;
+
     let configuration = {
         let mut config = get_configuration().expect("Failed to read configuration.");
         // Use a different database for each test case
         config.database.database_name = Uuid::new_v4().to_string();
         // Use a random OS port
         config.application.port = 0;
+        config.email_client.base_url = email_server.uri();
         config
     };
     configure_database(&configuration.database).await;
+
+
 
     let application = Application::build(configuration.clone())
         .await
@@ -63,6 +70,7 @@ pub async fn spawn_app() -> TestApp {
     TestApp {
         address,
         db_pool: get_connection_pool(&configuration.database),
+    	email_server
     }
 }
 
