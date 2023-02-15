@@ -1,10 +1,10 @@
 use once_cell::sync::Lazy;
 use sqlx::{Connection, Executor, PgConnection, PgPool};
 use uuid::Uuid;
+use wiremock::MockServer;
 use zero2prod::configuration::{get_configuration, DatabaseSettings};
 use zero2prod::startup::{get_connection_pool, Application};
 use zero2prod::telemetry::{get_subscriber, init_subscriber};
-use wiremock::MockServer;
 
 /**
 Given that we never refer to TRACING after its initialization, we could have used std::sync::Once with its call_once
@@ -28,7 +28,7 @@ static TRACING: Lazy<()> = Lazy::new(|| {
 pub struct TestApp {
     pub address: String,
     pub db_pool: PgPool,
-    pub email_server: MockServer
+    pub email_server: MockServer,
 }
 
 impl TestApp {
@@ -59,8 +59,6 @@ pub async fn spawn_app() -> TestApp {
     };
     configure_database(&configuration.database).await;
 
-
-
     let application = Application::build(configuration.clone())
         .await
         .expect("Failed to build application");
@@ -70,7 +68,7 @@ pub async fn spawn_app() -> TestApp {
     TestApp {
         address,
         db_pool: get_connection_pool(&configuration.database),
-    	email_server
+        email_server,
     }
 }
 

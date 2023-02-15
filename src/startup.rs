@@ -2,6 +2,7 @@ use crate::configuration::{DatabaseSettings, Settings};
 use crate::email_client::EmailClient;
 use crate::routes::*;
 use actix_web::dev::Server;
+use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
@@ -70,7 +71,7 @@ pub fn run(
             .service(health_check)
             .service(subscribe)
             .app_data(db_pool.clone())
-            .app_data(email_client.clone())
+            .app_data(Data::new(email_client.clone()))
     })
     .listen(listener)?
     .run();

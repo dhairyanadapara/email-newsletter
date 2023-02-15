@@ -4,6 +4,64 @@ use reqwest::Client;
 use secrecy::ExposeSecret;
 use secrecy::Secret;
 
+#[derive(Clone, Debug, serde::Serialize)]
+struct SenderEmail<'a> {
+    email: &'a str,
+}
+
+impl<'a> SenderEmail<'a> {
+    fn new(email: &'a str) -> SenderEmail {
+        SenderEmail { email }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+struct Personalizations<'a> {
+    to: Vec<RecipientsEmail<'a>>,
+}
+
+impl<'a> Personalizations<'a> {
+    fn new(email: &'a str) -> Personalizations {
+        Personalizations {
+            to: vec![RecipientsEmail::new(email)],
+        }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+struct RecipientsEmail<'a> {
+    email: &'a str,
+}
+
+impl<'a> RecipientsEmail<'a> {
+    fn new(email: &'a str) -> RecipientsEmail {
+        RecipientsEmail { email }
+    }
+}
+
+#[derive(Clone, Debug, serde::Serialize)]
+struct Content<'a> {
+    r#type: &'a str,
+    value: &'a str,
+}
+
+impl<'a> Content<'a> {
+    fn new(r#type: &'a str, value: &'a str) -> Content<'a> {
+        Content {
+            r#type: r#type,
+            value,
+        }
+    }
+}
+
+#[derive(serde::Serialize, Debug)]
+struct SendEmailRequest<'a> {
+    from: SenderEmail<'a>,
+    personalizations: Vec<Personalizations<'a>>,
+    subject: &'a str,
+    content: Vec<Content<'a>>,
+}
+
 #[derive(Clone, Debug)]
 pub struct EmailClient {
     http_client: Client,
@@ -27,42 +85,34 @@ impl EmailClient {
         }
     }
 
+    #[tracing::instrument(name = "Sending a confirmation email")]
     pub async fn send_email(
         &self,
         recipient: SubscriberEmail,
         subject: &str,
         text: &str,
-        html: &str
+        html: &str,
     ) -> Result<(), reqwest::Error> {
-        let url = format!("{}/message", self.base_url);
-
         let request_body = SendEmailRequest {
-            from: self.sender.as_ref(),
-            to: recipient.as_ref(),
+            from: SenderEmail::new(self.sender.as_ref()),
+            personalizations: vec![Personalizations::new(recipient.as_ref())],
             subject,
-            text,
-            html
+            content: vec![Content::new("text/html", &html)],
         };
+
+        tracing::info!("request body {:?}", request_body);
+
         let _builder = self
             .http_client
-            .post(&url)
+            .post(&self.base_url)
             .header(header::AUTHORIZATION, self.auth_token.expose_secret())
+            .header(header::CONTENT_TYPE, "application/json")
             .json(&request_body)
             .send()
             .await?
             .error_for_status()?;
         Ok(())
     }
-}
-
-#[derive(serde::Serialize)]
-#[serde(rename_all = "PascalCase")]
-struct SendEmailRequest<'a> {
-    from: &'a str,
-    to: &'a str,
-    subject: &'a str,
-    text: &'a str,
-    html: &'a str
 }
 
 #[cfg(test)]

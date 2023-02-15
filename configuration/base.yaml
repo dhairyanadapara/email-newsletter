@@ -1,9 +1,9 @@
 database:
-  host: "localhost"
+  host: "dpg-cdnhjnpa6gdooi6s6n50-a"
   port: 5432
-  username: "postgres"
-  password: "password"
-  database_name: "newsletter"
+  username: "dhairya"
+  password: "fGcBChnpnKQXi8i5EudKVTJvG5iABFnr"
+  database_name: "newsletter_8e23"
 application:
   port: 8000
 email_client:

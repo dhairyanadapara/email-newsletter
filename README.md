@@ -7,6 +7,11 @@
 ### First Run
 
 ```
+# install psql
+# Follow steps from website
+# install sqlx
+cargo install sqlx
+# init database
 ./scripts/init_db.sh
 ```
 
