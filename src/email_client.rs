@@ -94,7 +94,7 @@ impl EmailClient {
             from: SenderEmail::new(self.sender.as_ref()),
             personalizations: vec![Personalizations::new(recipient.as_ref())],
             subject,
-            content: vec![Content::new("text/html", &html)],
+            content: vec![Content::new("text/html", html)],
         };
 
         tracing::info!("request body {:?}", request_body);
