@@ -47,10 +47,7 @@ struct Content<'a> {
 
 impl<'a> Content<'a> {
     fn new(r#type: &'a str, value: &'a str) -> Content<'a> {
-        Content {
-            r#type: r#type,
-            value,
-        }
+        Content { r#type, value }
     }
 }
 

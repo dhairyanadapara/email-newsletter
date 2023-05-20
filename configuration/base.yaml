@@ -1,9 +1,9 @@
 database:
-  host: "dpg-cdnhjnpa6gdooi6s6n50-a"
+  host: "localhost"
   port: 5432
-  username: "dhairya"
-  password: "fGcBChnpnKQXi8i5EudKVTJvG5iABFnr"
-  database_name: "newsletter_8e23"
+  username: "postgres"
+  password: "password"
+  database_name: "newsletter"
 application:
   port: 8000
 email_client:
@@ -11,4 +11,5 @@ email_client:
   auth_token: test-835621cf-b09123a7
   sender: "test@newsletter.com"
   timeout_milliseconds: 10000
+
 
