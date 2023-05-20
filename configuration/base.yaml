@@ -12,3 +12,4 @@ email_client:
   sender: "test@newsletter.com"
   timeout_milliseconds: 10000
 
+

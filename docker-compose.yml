@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+    postgres-db:
+        container_name: emil-newsletter
+        image: postgres:14
+        restart: always
+        ports:
+            - "5432:5432"
+        command: postgres
+        expose:
+            - 5432
+        environment:
+            POSTGRES_USER: "postgres"
+            POSTGRES_PASSWORD: "password"
+            POSTGRES_DB: "newsletter"
+
+            #this ENV variable is only required for the healthcheck section - if you don't specify it, the check command will fail stating the root user doesn't exist in posgres
+            PGUSER: "postgres"
+        healthcheck:
+            #CHANGE 1: this command checks if the database is ready, right on the source db server
+            test: ["CMD-SHELL", "pg_isready"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
