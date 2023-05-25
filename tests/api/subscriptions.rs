@@ -1,6 +1,4 @@
 use crate::helpers::spawn_app;
-use claim::assert_ok;
-use linkify::LinkFinder;
 use wiremock::matchers::*;
 use wiremock::{Mock, ResponseTemplate};
 
