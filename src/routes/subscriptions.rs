@@ -1,5 +1,8 @@
+use std::println;
+
 use crate::domain::{NewSubscriber, SubscriberEmail, SubscriberName};
 use crate::email_client::EmailClient;
+use crate::startup::ApplicationBaseUrl;
 use actix_web::{post, web, HttpResponse};
 use chrono::Utc;
 use sqlx::PgPool;
@@ -34,17 +37,20 @@ pub async fn subscribe(
     form: web::Form<FormData>,
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
+    base_url: web::Data<ApplicationBaseUrl>,
 ) -> HttpResponse {
     let new_subscriber = match form.0.try_into() {
         Ok(subscriber) => subscriber,
-        Err(_) => return HttpResponse::BadRequest().finish(),
+        Err(_) => {
+            return HttpResponse::BadRequest().finish();
+        }
     };
 
     if insert_subscriber(&pool, &new_subscriber).await.is_err() {
         return HttpResponse::InternalServerError().finish();
     }
 
-    if send_confirmation_email(&email_client, new_subscriber)
+    if send_confirmation_email(&email_client, new_subscriber, &base_url.0)
         .await
         .is_err()
     {
@@ -72,6 +78,7 @@ pub async fn insert_subscriber(pool: &PgPool, form: &NewSubscriber) -> Result<()
     .execute(pool)
     .await
     .map_err(|e| {
+        println!("error: Failed to execute query: {:?}", e);
         tracing::error!("Failed to execute query: {:?}", e);
         e
     })?;
@@ -85,8 +92,12 @@ pub async fn insert_subscriber(pool: &PgPool, form: &NewSubscriber) -> Result<()
 pub async fn send_confirmation_email(
     email_client: &EmailClient,
     new_subscriber: NewSubscriber,
+    base_url: &str,
 ) -> Result<(), reqwest::Error> {
-    let confirmation_link = "https://my-api.com/subscriptions/confirm";
+    let confirmation_link: String = format!(
+        "{}/subscriptions/confirm?subscription_token=mytoken",
+        base_url
+    );
     let plain_body = format!(
         "Welcome to our newsletter!\nVisit {} to confirm your subscription.",
         confirmation_link
@@ -100,4 +111,7 @@ pub async fn send_confirmation_email(
     email_client
         .send_email(new_subscriber.email, "Welcome", &plain_body, &html_body)
         .await
+        .unwrap();
+
+    Ok(())
 }
