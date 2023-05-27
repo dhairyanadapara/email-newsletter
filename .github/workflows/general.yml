@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
      postgres:
-        image: postgres:12
+        image: postgres:14
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -52,11 +52,11 @@ jobs:
             ~/.cargo/bin/cargo-sqlx
           key: ${{ runner.os }}-sqlx-${{ env.SQLX_VERSION }}-${{ env.SQLX_FEATURES }}
 
-      - name: Install sqlx-cli 
+      - name: Install sqlx-cli
         uses: actions-rs/cargo@v1
         if: steps.cache-sqlx.outputs.cache-hit == false
         with:
-          command: install 
+          command: install
           args: >
             sqlx-cli
             --force
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:12
+        image: postgres:14
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -130,11 +130,11 @@ jobs:
             ~/.cargo/bin/sqlx
           key: ${{ runner.os }}-sqlx-${{ env.SQLX_VERSION }}-${{ env.SQLX_FEATURES }}
 
-      - name: Install sqlx-cli 
+      - name: Install sqlx-cli
         uses: actions-rs/cargo@v1
         if: steps.cache-sqlx.outputs.cache-hit == false
         with:
-          command: install 
+          command: install
           args: >
             sqlx-cli
             --force
@@ -158,7 +158,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:12
+        image: postgres:14
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
@@ -190,11 +190,11 @@ jobs:
             ~/.cargo/bin/sqlx
           key: ${{ runner.os }}-sqlx-${{ env.SQLX_VERSION }}-${{ env.SQLX_FEATURES }}
 
-      - name: Install sqlx-cli 
+      - name: Install sqlx-cli
         uses: actions-rs/cargo@v1
         if: steps.cache-sqlx.outputs.cache-hit == false
         with:
-          command: install 
+          command: install
           args: >
             sqlx-cli
             --force

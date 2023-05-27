@@ -7,7 +7,7 @@ use actix_web::{post, web, HttpResponse};
 use chrono::Utc;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
-use sqlx::PgPool;
+use sqlx::{PgPool, Postgres, Transaction};
 use uuid::Uuid;
 
 #[derive(serde::Deserialize)]
@@ -56,14 +56,22 @@ pub async fn subscribe(
         }
     };
 
-    let sid = match insert_subscriber(&pool, &new_subscriber).await {
+    let mut transaction = match pool.begin().await {
+        Ok(transaction) => transaction,
+        Err(_) => return HttpResponse::InternalServerError().finish(),
+    };
+
+    let sid = match insert_subscriber(&mut transaction, &new_subscriber).await {
         Ok(subscriber_id) => subscriber_id,
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
 
     let subscription_token = generate_subscription_token();
 
-    if store_token(&pool, sid, &subscription_token).await.is_err() {
+    if store_token(&mut transaction, sid, &subscription_token)
+        .await
+        .is_err()
+    {
         return HttpResponse::InternalServerError().finish();
     }
 
@@ -79,6 +87,10 @@ pub async fn subscribe(
         return HttpResponse::InternalServerError().finish();
     }
 
+    if transaction.commit().await.is_err() {
+        return HttpResponse::InternalServerError().finish();
+    }
+
     HttpResponse::Ok().finish()
 }
 
@@ -86,7 +98,10 @@ pub async fn subscribe(
     name="Saving new subscriber details into database"
     skip(pool, form)
 )]
-pub async fn insert_subscriber(pool: &PgPool, form: &NewSubscriber) -> Result<Uuid, sqlx::Error> {
+pub async fn insert_subscriber(
+    pool: &mut Transaction<'_, Postgres>,
+    form: &NewSubscriber,
+) -> Result<Uuid, sqlx::Error> {
     let subscriber_id = Uuid::new_v4();
     sqlx::query!(
         r#"
@@ -145,7 +160,7 @@ pub async fn send_confirmation_email(
     skip(subscription_token, pool)
 )]
 pub async fn store_token(
-    pool: &PgPool,
+    pool: &mut Transaction<'_, Postgres>,
     subscriber_id: Uuid,
     subscription_token: &str,
 ) -> Result<(), sqlx::Error> {
