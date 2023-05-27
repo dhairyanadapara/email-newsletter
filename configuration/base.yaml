@@ -5,11 +5,10 @@ database:
   password: "password"
   database_name: "newsletter"
 application:
+  base_url: "http://127.0.0.1"
   port: 8000
 email_client:
-  base_url: https://api.mailgun.net/v3/test.mailgun.org
-  auth_token: test-835621cf-b09123a7
-  sender: "test@newsletter.com"
+  base_url: https://api.sendgrid.com/v3/mail
+  auth_token: "Bearer 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"
+  sender: "hey.xplorare@gmail.com"
   timeout_milliseconds: 10000
-
-
