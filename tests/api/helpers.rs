@@ -49,7 +49,7 @@ impl TestApp {
         let body: serde_json::Value = serde_json::from_slice(&email_request.body).unwrap();
         let finder = LinkFinder::new();
         let links: Vec<_> = finder
-            .links(&body["content"][0]["value"].as_str().unwrap())
+            .links(&body["htmlContent"].as_str().unwrap())
             .collect();
 
         let link = links[0].as_str();
