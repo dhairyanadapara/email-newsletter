@@ -6,57 +6,35 @@ use secrecy::Secret;
 
 #[derive(Clone, Debug, serde::Serialize)]
 struct SenderEmail<'a> {
+    name: &'a str,
     email: &'a str,
 }
 
 impl<'a> SenderEmail<'a> {
-    fn new(email: &'a str) -> SenderEmail {
-        SenderEmail { email }
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize)]
-struct Personalizations<'a> {
-    to: Vec<RecipientsEmail<'a>>,
-}
-
-impl<'a> Personalizations<'a> {
-    fn new(email: &'a str) -> Personalizations {
-        Personalizations {
-            to: vec![RecipientsEmail::new(email)],
-        }
+    fn new(email: &'a str, name: &'a str) -> SenderEmail<'a> {
+        SenderEmail { email, name }
     }
 }
 
 #[derive(Clone, Debug, serde::Serialize)]
 struct RecipientsEmail<'a> {
     email: &'a str,
+    name: &'a str,
 }
 
 impl<'a> RecipientsEmail<'a> {
-    fn new(email: &'a str) -> RecipientsEmail {
-        RecipientsEmail { email }
-    }
-}
-
-#[derive(Clone, Debug, serde::Serialize)]
-struct Content<'a> {
-    r#type: &'a str,
-    value: &'a str,
-}
-
-impl<'a> Content<'a> {
-    fn new(r#type: &'a str, value: &'a str) -> Content<'a> {
-        Content { r#type, value }
+    fn new(email: &'a str, name: &'a str) -> RecipientsEmail<'a> {
+        RecipientsEmail { email, name }
     }
 }
 
 #[derive(serde::Serialize, Debug)]
+#[serde(rename_all = "camelCase")]
 struct SendEmailRequest<'a> {
-    from: SenderEmail<'a>,
-    personalizations: Vec<Personalizations<'a>>,
+    sender: SenderEmail<'a>,
+    to: Vec<RecipientsEmail<'a>>,
     subject: &'a str,
-    content: Vec<Content<'a>>,
+    html_content: &'a str,
 }
 
 #[derive(Clone, Debug)]
@@ -87,22 +65,21 @@ impl EmailClient {
         &self,
         recipient: SubscriberEmail,
         subject: &str,
-        text: &str,
         html: &str,
     ) -> Result<(), reqwest::Error> {
         let request_body = SendEmailRequest {
-            from: SenderEmail::new(self.sender.as_ref()),
-            personalizations: vec![Personalizations::new(recipient.as_ref())],
+            sender: SenderEmail::new(self.sender.as_ref(), "Xplorare"),
+            to: vec![RecipientsEmail::new(recipient.as_ref(), "User")],
             subject,
-            content: vec![Content::new("text/html", html)],
+            html_content: html,
         };
 
         tracing::info!("request body {:?}", request_body);
-        let url = format!("{}/send", self.base_url);
+        let url = format!("{}/email", self.base_url);
         let _builder = self
             .http_client
             .post(&url)
-            .header(header::AUTHORIZATION, self.auth_token.expose_secret())
+            .header("api-key", self.auth_token.expose_secret())
             .header(header::CONTENT_TYPE, "application/json")
             .json(&request_body)
             .send()
@@ -131,11 +108,10 @@ mod tests {
         fn matches(&self, request: &Request) -> bool {
             let result: Result<serde_json::Value, _> = serde_json::from_slice(&request.body);
             if let Ok(body) = result {
-                body.get("From").is_some()
-                    && body.get("To").is_some()
-                    && body.get("Subject").is_some()
-                    && body.get("Text").is_some()
-                    && body.get("Html").is_some()
+                body.get("sender").is_some()
+                    && body.get("to").is_some()
+                    && body.get("subject").is_some()
+                    && body.get("htmlContent").is_some()
             } else {
                 false
             }
@@ -168,14 +144,15 @@ mod tests {
         let mock_server = MockServer::start().await;
         let email_client = email_client(mock_server.uri());
 
-        Mock::given(any())
+        Mock::given(path("/email"))
+            .and(method("POST"))
             .respond_with(ResponseTemplate::new(200))
             .expect(1)
             .mount(&mock_server)
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content(), &content())
+            .send_email(email(), &subject(), &content())
             .await;
 
         assert_ok!(outcome);
@@ -186,15 +163,18 @@ mod tests {
         let mock_server = MockServer::start().await;
         let email_client = email_client(mock_server.uri());
 
-        Mock::given(any())
+        Mock::given(path("/email"))
+            .and(method("POST"))
             .respond_with(ResponseTemplate::new(500))
             .expect(1)
             .mount(&mock_server)
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content(), &content())
+            .send_email(email(), &subject(), &content())
             .await;
+
+        println!("{:?}", outcome);
 
         assert_err!(outcome);
     }
@@ -206,14 +186,15 @@ mod tests {
 
         let response = ResponseTemplate::new(200).set_delay(std::time::Duration::from_secs(180));
 
-        Mock::given(any())
+        Mock::given(path("/email"))
+            .and(method("POST"))
             .respond_with(response)
             .expect(1)
             .mount(&mock_server)
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content(), &content())
+            .send_email(email(), &subject(), &content())
             .await;
 
         assert_err!(outcome);
