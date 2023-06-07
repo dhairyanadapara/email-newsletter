@@ -8,7 +8,7 @@ application:
   base_url: "http://127.0.0.1"
   port: 8000
 email_client:
-  base_url: https://api.sendgrid.com/v3/mail
-  auth_token: "Bearer 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"
+  base_url: https://api.brevo.com/v3/smtp
+  auth_token: "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"
   sender: "hey.xplorare@gmail.com"
   timeout_milliseconds: 10000
