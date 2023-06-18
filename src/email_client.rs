@@ -174,8 +174,6 @@ mod tests {
             .send_email(email(), &subject(), &content())
             .await;
 
-        println!("{:?}", outcome);
-
         assert_err!(outcome);
     }
 
