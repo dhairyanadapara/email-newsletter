@@ -63,7 +63,7 @@ impl EmailClient {
     #[tracing::instrument(name = "Sending a confirmation email")]
     pub async fn send_email(
         &self,
-        recipient: SubscriberEmail,
+        recipient: &SubscriberEmail,
         subject: &str,
         html: &str,
     ) -> Result<(), reqwest::Error> {
@@ -152,7 +152,7 @@ mod tests {
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content())
+            .send_email(&email(), &subject(), &content())
             .await;
 
         assert_ok!(outcome);
@@ -171,7 +171,7 @@ mod tests {
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content())
+            .send_email(&email(), &subject(), &content())
             .await;
 
         assert_err!(outcome);
@@ -192,7 +192,7 @@ mod tests {
             .await;
 
         let outcome = email_client
-            .send_email(email(), &subject(), &content())
+            .send_email(&email(), &subject(), &content())
             .await;
 
         assert_err!(outcome);

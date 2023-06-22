@@ -81,6 +81,7 @@ pub fn run(
             .service(health_check)
             .service(subscribe)
             .service(confirm)
+            .service(publish_newsletter)
             .app_data(db_pool.clone())
             .app_data(base_url.clone())
             .app_data(Data::new(email_client.clone()))
